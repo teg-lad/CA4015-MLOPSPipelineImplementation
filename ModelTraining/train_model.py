@@ -127,7 +127,7 @@ def train_model(dataset_path, hyperparams, run_name, device):
             break
 
 
-def load_dataset(dataset_path, undersample=False, samples_to_take=None):
+def load_dataset(dataset_path, undersample=True, samples_to_take=None):
     """
     This function loads and returns the dataset to be used.
     :param dataset_path: The path to the dataset we want to load
