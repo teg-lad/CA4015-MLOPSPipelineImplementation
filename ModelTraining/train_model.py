@@ -61,7 +61,6 @@ def train_model(dataset_path, hyperparams, device):
             outputs = model(**inputs, labels=batch_labels)
             loss = outputs.loss
 
-            print(loss, type(loss))
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
@@ -83,9 +82,14 @@ def train_model(dataset_path, hyperparams, device):
             for i in tqdm(range(0, len(train_texts), batch_size), desc="Validation Steps"):
 
                 batch_texts = val_texts[i:i + batch_size]
+                batch_labels = train_labels[i:i + batch_size]
 
                 val_inputs = tokenizer(batch_texts, padding=True, truncation=True, return_tensors="pt")
-                val_outputs = model(**val_inputs)
+
+                val_inputs.to(device)
+                batch_labels.to(device)
+
+                val_outputs = model(**val_inputs, labels=batch_labels)
                 predictions.extend(torch.argmax(val_outputs.logits, dim=1).tolist())
 
                 eval_epoch_loss += loss.cpu().detach().numpy() * len(batch_texts)
