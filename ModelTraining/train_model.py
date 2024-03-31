@@ -43,7 +43,7 @@ def train_model(dataset_path, hyperparams, run_name, device):
     model_path.mkdir(exist_ok=True, parents=True)
 
     # For each epoch
-    for epoch in tqdm(range(10), desc="Epochs"):
+    for epoch in tqdm(range(num_epochs), desc="Epochs"):
         model.train()
 
         # Track the loss this epoch and the total samples to get the average.
