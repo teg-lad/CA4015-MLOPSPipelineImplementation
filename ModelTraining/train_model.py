@@ -13,19 +13,21 @@ import mlflow
 
 
 def train_model(dataset_path, hyperparams, device):
+    model_to_load = "distilbert/distilroberta-base"
+    # model_to_load = "sshleifer/tiny-distilroberta-base"
 
     # Load in the model with a new classification head and the tokenizer.# sshleifer/tiny-distilroberta-base
-    model = AutoModelForSequenceClassification.from_pretrained("distilbert/distilroberta-base", num_labels=6)
-    tokenizer = AutoTokenizer.from_pretrained("distilbert/distilroberta-base")
+    model = AutoModelForSequenceClassification.from_pretrained(model_to_load, num_labels=6)
+    tokenizer = AutoTokenizer.from_pretrained(model_to_load)
 
     model.to(device)
 
     batch_size, learning_rate = hyperparams["batch_size"], hyperparams["learning_rate"]
+    num_epochs = 10
 
-    mlflow_params = {"base_model": self.model_to_load, "epochs": num_epochs, "early_stopping": early_stopping,
-                     "batch_size": batch_size, "loss_type": "CosineSimilarityLoss",
-                     "scheduler": scheduler, "optimizer": "AdamW", "learning_rate": learning_rate,
-                     "weight_decay": weight_decay, "max_grad_norm": max_grad_norm}
+    mlflow_params = {"base_model": model_to_load, "epochs": num_epochs,
+                     "batch_size": batch_size, "loss_type": "Negative Log Likelihood", "optimizer": "AdamW",
+                     "learning_rate": learning_rate}
 
     mlflow.log_params(mlflow_params)
 
