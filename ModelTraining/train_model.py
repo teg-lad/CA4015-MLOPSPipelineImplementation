@@ -82,7 +82,7 @@ def train_model(dataset_path, hyperparams, device):
             for i in tqdm(range(0, len(val_texts), batch_size), desc="Validation Steps"):
 
                 batch_texts = val_texts[i:i + batch_size]
-                batch_labels = train_labels[i:i + batch_size]
+                batch_labels = val_labels[i:i + batch_size]
 
                 val_inputs = tokenizer(batch_texts, padding=True, truncation=True, return_tensors="pt")
 
