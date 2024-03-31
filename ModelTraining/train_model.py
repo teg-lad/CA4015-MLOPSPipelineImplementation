@@ -13,8 +13,8 @@ import mlflow
 
 
 def train_model(dataset_path, hyperparams, device):
-    model_to_load = "distilbert/distilroberta-base"
-    # model_to_load = "sshleifer/tiny-distilroberta-base"
+    # model_to_load = "distilbert/distilroberta-base"
+    model_to_load = "sshleifer/tiny-distilroberta-base"
 
     # Load in the model with a new classification head and the tokenizer.# sshleifer/tiny-distilroberta-base
     model = AutoModelForSequenceClassification.from_pretrained(model_to_load, num_labels=6)
@@ -60,11 +60,13 @@ def train_model(dataset_path, hyperparams, device):
 
             outputs = model(**inputs, labels=batch_labels)
             loss = outputs.loss
+
+            print(loss, type(loss))
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
 
-            epoch_loss += loss * len(batch_texts)
+            epoch_loss += loss.cpu().detach().numpy() * len(batch_texts)
             total_samples += len(batch_texts)
 
         epoch_loss = epoch_loss / total_samples
@@ -86,7 +88,7 @@ def train_model(dataset_path, hyperparams, device):
                 val_outputs = model(**val_inputs)
                 predictions.extend(torch.argmax(val_outputs.logits, dim=1).tolist())
 
-                eval_epoch_loss += loss * len(batch_texts)
+                eval_epoch_loss += loss.cpu().detach().numpy() * len(batch_texts)
                 eval_total_samples += len(batch_texts)
 
             val_acc = accuracy_score(val_labels, predictions)
@@ -116,8 +118,8 @@ def load_dataset(dataset_path):
 if __name__ == "__main__":
 
     # Define your lists of hyperparameters
-    batch_size = [512, 256, 128]
-    learning_rate = [2e-5, 2e-4]
+    batch_size = [256, 128, 64]
+    learning_rate = [2e-5, 2e-4, 2e-3]
 
     # Generate the Cartesian product of hyperparameters
     hyperparameter_combinations = list(product(batch_size, learning_rate))  # Use `list()` to convert the product
