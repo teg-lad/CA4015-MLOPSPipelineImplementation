@@ -179,7 +179,7 @@ if __name__ == "__main__":
     mlflow.set_tracking_uri("http://localhost:5000/")
 
     # Set the MLFlow experiment
-    mlflow.set_experiment("DistillerRobertaEmotionClassifier")
+    mlflow.set_experiment("DistilRoBERTaEmotionClassifier")
 
     # For every set of hyperparameters
     for hyperparams in hyperparameter_dicts:
@@ -189,4 +189,4 @@ if __name__ == "__main__":
 
             # Train a model
             train_model(dataset_path, hyperparams, run_name, device)
-        break
+
