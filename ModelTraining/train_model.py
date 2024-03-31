@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Type, Dict
 from datetime import datetime
 from itertools import product
 from tqdm import tqdm
@@ -12,9 +11,8 @@ from sklearn.metrics import accuracy_score
 import mlflow
 
 
-def train_model(dataset_path, hyperparams, device):
-    # model_to_load = "distilbert/distilroberta-base"
-    model_to_load = "sshleifer/tiny-distilroberta-base"
+def train_model(dataset_path, hyperparams, run_name, device):
+    model_to_load = "distilbert/distilroberta-base"
 
     # Load in the model with a new classification head and the tokenizer.# sshleifer/tiny-distilroberta-base
     model = AutoModelForSequenceClassification.from_pretrained(model_to_load, num_labels=6)
@@ -23,26 +21,30 @@ def train_model(dataset_path, hyperparams, device):
     model.to(device)
 
     batch_size, learning_rate = hyperparams["batch_size"], hyperparams["learning_rate"]
-    num_epochs = 10
+    num_epochs = 100
+    early_stopping = 5
 
-    mlflow_params = {"base_model": model_to_load, "epochs": num_epochs,
+    mlflow_params = {"base_model": model_to_load, "epochs": num_epochs, "early_stopping": early_stopping,
                      "batch_size": batch_size, "loss_type": "Negative Log Likelihood", "optimizer": "AdamW",
                      "learning_rate": learning_rate}
 
     mlflow.log_params(mlflow_params)
 
-    # Load the dataset
-    text, labels = load_dataset(dataset_path)
-
-    train_texts, val_texts, train_labels, val_labels = train_test_split(text, labels, random_state=123, stratify=labels)
+    train_texts, val_texts, train_labels, val_labels = load_dataset(dataset_path)
 
     train_labels = torch.tensor(train_labels)
     val_labels = torch.tensor(val_labels)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
+    best_evaluation_loss = None
+
+    model_path = Path(__file__).parent / "Models"
+    model_path.mkdir(exist_ok=True, parents=True)
+
     # For each epoch
     for epoch in tqdm(range(10), desc="Epochs"):
+        model.train()
 
         # Track the loss this epoch and the total samples to get the average.
         epoch_loss = 0
@@ -79,8 +81,9 @@ def train_model(dataset_path, hyperparams, device):
         # Validation
         with torch.no_grad():
 
-            for i in tqdm(range(0, len(val_texts), batch_size), desc="Validation Steps"):
+            model.eval()
 
+            for i in tqdm(range(0, len(val_texts), batch_size), desc="Validation Steps"):
                 batch_texts = val_texts[i:i + batch_size]
                 batch_labels = val_labels[i:i + batch_size]
 
@@ -95,7 +98,7 @@ def train_model(dataset_path, hyperparams, device):
                 eval_epoch_loss += loss.cpu().detach().numpy() * len(batch_texts)
                 eval_total_samples += len(batch_texts)
 
-            val_acc = accuracy_score(val_labels, predictions)
+        val_acc = accuracy_score(val_labels, predictions)
 
         eval_epoch_loss = eval_epoch_loss / eval_total_samples
 
@@ -103,11 +106,28 @@ def train_model(dataset_path, hyperparams, device):
         mlflow.log_metric("val_accuracy", val_acc, step=epoch)
         mlflow.log_metric("val_loss", eval_epoch_loss, step=epoch)
 
-    # Save the model
-    model.save_pretrained("distilroberta_model")
+        # Save the model if it has the lowest evaluation score we have seen so far.
+        if best_evaluation_loss is None or eval_epoch_loss < best_evaluation_loss:
+
+            # Update the best evaluation loss
+            best_evaluation_loss = eval_epoch_loss
+
+            # Reset the count of concurrent epochs without improvement.
+            epochs_since_improvement = 0
+
+            # Save the model
+            model.save_pretrained((model_path / run_name))
+
+        # If there is no improvement, track that this is an epoch with no improvement.
+        else:
+            epochs_since_improvement += 1
+
+        # If we have reached the number of allowable epochs without improvement, break the training loop.
+        if epochs_since_improvement >= early_stopping:
+            break
 
 
-def load_dataset(dataset_path):
+def load_dataset(dataset_path, undersample=False, samples_to_take=None):
     """
     This function loads and returns the dataset to be used.
     :param dataset_path: The path to the dataset we want to load
@@ -116,14 +136,32 @@ def load_dataset(dataset_path):
 
     df = pd.read_csv(dataset_path)
 
-    return df["text"].tolist(), df["label"].tolist()
+    if undersample or samples_to_take:
+
+        if not samples_to_take:
+            # Calculate the minimum count among all classes
+            samples_to_take = df.label.value_counts().min()
+
+        # Define a function to undersample each class
+        def undersample_class(group):
+            return group.sample(samples_to_take, random_state=123)
+
+        # Apply the undersampling function to each class group
+        df = df.groupby('label', group_keys=False).apply(undersample_class)
+
+        # Reset the index of the undersampled DataFrame
+        df.reset_index(drop=True, inplace=True)
+
+    text, labels = df["text"].tolist(), df["label"].tolist()
+
+    return train_test_split(text, labels, random_state=123, stratify=labels)
 
 
 if __name__ == "__main__":
 
     # Define your lists of hyperparameters
     batch_size = [256, 128, 64]
-    learning_rate = [2e-5, 2e-4, 2e-3]
+    learning_rate = [1e-6, 1e-5, 1e-4]
 
     # Generate the Cartesian product of hyperparameters
     hyperparameter_combinations = list(product(batch_size, learning_rate))  # Use `list()` to convert the product
@@ -145,11 +183,10 @@ if __name__ == "__main__":
 
     # For every set of hyperparameters
     for hyperparams in hyperparameter_dicts:
-
         timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
         run_name = "_".join([f"{name}-{value}" for name, value in hyperparams.items()]) + "_" + timestamp
         with mlflow.start_run(run_name=run_name):
 
             # Train a model
-            train_model(dataset_path, hyperparams, device)
+            train_model(dataset_path, hyperparams, run_name, device)
         break
