@@ -79,7 +79,7 @@ def train_model(dataset_path, hyperparams, device):
         # Validation
         with torch.no_grad():
 
-            for i in tqdm(range(0, len(train_texts), batch_size), desc="Validation Steps"):
+            for i in tqdm(range(0, len(val_texts), batch_size), desc="Validation Steps"):
 
                 batch_texts = val_texts[i:i + batch_size]
                 batch_labels = train_labels[i:i + batch_size]
