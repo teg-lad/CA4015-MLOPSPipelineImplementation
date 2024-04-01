@@ -6,9 +6,19 @@ best accuracy.
 # Similar imports to the model training script.
 from pathlib import Path
 from sklearn.metrics import f1_score
+import sys
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 from tqdm import tqdm
+
+# Get the path to the root of the repo, so the CA4015... directory
+repo_path = Path(__file__).parent.parent
+
+# Add the repo_path to the sys.path.
+# This is a list of paths that Python checks when it looks for packages and modules. If we do this then we should be
+# able to find and import other scripts from this repo. We will need the dataset script for evalaution so we can be
+# consistent with our dataset sampling.
+sys.path.append(str(repo_path.absolute()))
 
 # Import the dataset loader, because we want to ensure that the validation set is consistent.
 from ModelTraining.train_model import load_dataset
