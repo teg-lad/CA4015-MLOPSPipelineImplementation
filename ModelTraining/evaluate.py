@@ -4,7 +4,7 @@ best accuracy.
 """
 
 # Similar imports to the model training script.
-from huggingface_hub import login # This might be needed to log in so you can push a model.
+from huggingface_hub import login  # This might be needed to log in so you can push a model.
 from pathlib import Path
 from sklearn.metrics import f1_score
 import sys
@@ -125,6 +125,7 @@ def evaluate():
     model.push_to_hub("DistilRoBERTaEmotionClassifier")  # Add token=hf_token after filling in your token.
 
     print("The model has been pushed!")
+
 
 if __name__ == "__main__":
     evaluate()
