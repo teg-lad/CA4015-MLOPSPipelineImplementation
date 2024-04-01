@@ -4,6 +4,7 @@ best accuracy.
 """
 
 # Similar imports to the model training script.
+from huggingface_hub import login # This might be needed to log in so you can push a model.
 from pathlib import Path
 from sklearn.metrics import f1_score
 import sys
@@ -104,9 +105,26 @@ def evaluate():
             best_f1 = macro_f1
             best_model = model_path
 
-    # Output the model name so we know which model had the best F1 and what the F1 was.
+    # Output the model name, so we know which model had the best F1 and what the F1 was.
     print(f"The best model in our Models folder is {best_model.name} with an F1 score of {best_f1}")
 
+    # Now that we have the best model, we should push it to HuggingFace so we can download it when we need it.
+
+    # You may need to log in, if you run this you should be able to login
+    # login()
+
+    # Alternatively, if you go into setting on HF when logged in, go to access tokens and create a new one with write
+    # access. You can pass the hf_token to push_to_hub, and it will use that token to validation access.
+
+    # hf_token = "Your_token_goes_here"
+
+    # Load in the best model
+    model = AutoModelForSequenceClassification.from_pretrained(best_model)
+
+    # Push the best model to the Hub under the given name.
+    model.push_to_hub("DistilRoBERTaEmotionClassifier")  # Add token=hf_token after filling in your token.
+
+    print("The model has been pushed!")
 
 if __name__ == "__main__":
     evaluate()
