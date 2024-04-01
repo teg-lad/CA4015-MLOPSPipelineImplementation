@@ -59,6 +59,9 @@ def evaluate():
         # Load in the model, we don't need to set the num_labels as the model already has a classification head.
         model = AutoModelForSequenceClassification.from_pretrained(model_path)
 
+        # Move the model to the GPU if available
+        model.to(device)
+
         # List for the current model predictions.
         model_predictions = list()
 
