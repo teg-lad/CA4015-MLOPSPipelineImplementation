@@ -10,22 +10,21 @@ In our use case, the data source will be the social media platform that our comp
 
 Cleaning for the raw data will depend on the form it takes when extracted. It may be within HTML tags, contain special characters or in some other format. We need to extract the data so it is in a usable format.
 
-Here is an [example]() of what the raw data could have looked like. Processing this would involve using a script like [this](). This gives us clean data that does not contain nulls and has human-readable text. The dataset that we have is already sufficiently clean for use with a deep learning model that extracts features itself, we only need to tokenize the text (more on this later).
+Have a look at the [Data Notebook](DataExample.ipynb) for some examples of what the raw data looks like and how it can be parsed. Additionally, you may need to check for null values, incorrect format and other issues, solving these makes life easier later. This gives us clean data that does not contain nulls and has human-readable text. The dataset that we have is already sufficiently clean for use with a deep learning model that extracts features itself, we only need to tokenize the text (more on this later).
 
 Labelling is typically a more manual process and you may initially label samples yourself before scaling up to meet data needs. You can use data labelling services or even create a language model framework to label data using a language models reasoning.
 
 #### Data Exploration
 
-Look in [this notebook]() for some sample data exploration, we aim to understand our data and try to foresee what issues we may run into.
+Look in the [Data Notebook](DataExample.ipynb) for some sample data exploration, we aim to understand our data and try to foresee what issues we may run into.
 
 Additionally, having some summary statistics will help us to identify outliers or anomalies when we put our model into production.
 
 #### Data Processing
 
-Data processing is not as difficult when training deep learning model, but it is still needed. For our use case we will need to tokenize the text so that the model can process it. [Here]() is a script showing this.
+Data processing is not as difficult when training deep learning model, but it is still needed. For our use case we will need to tokenize the text so that the model can process it. This is can be done at runtime and you will see this in the Model section when we begin model training.
 
 In classical machine learning, you usually have to spend more time processing the features to extract predictive signal. This can sometimes be the case in deep learning when you make use of multiple features, such as text as well as other metadata.
-
 
 #### Data Versioning
 
