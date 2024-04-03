@@ -35,7 +35,7 @@ Identifying a problem and planning the project. There are several considerations
 
 Scoping helps in planning an ML project, allowing for a more structured approach and (hopefully) reducing any unplanned setbacks.
 
-### [2 - Data](Data)
+### [2 - Data](DataPipeline)
 Once the project is scoped it is time to consider the data that will be needed. Data is the backbone of any machine learning project, having the right, clean type of data with good predictive signal is key to creating a model that works well.
 More often than not, a poor model with good data beats a good model with poor data. So what should we consider when it comes to data?
 
